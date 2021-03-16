@@ -12,7 +12,7 @@ app = Flask(__name__)
 # Set Server-side session config: Save sessions in the local app directory.
 app.secret_key = settings.SECRET_KEY
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_COOKIE_NAME'] = 'peanutButter'
+app.config['SESSION_COOKIE_NAME'] = 'banjoKazooie'
 app.config['SESSION_COOKIE_DOMAIN'] = settings.APP_HOST
 Session(app)
 
@@ -34,13 +34,13 @@ def not_found(error):
 #
 # Routing: GET and POST using Flask-Session
 #
-class SignIn(Resource):
+class Login(Resource):
 	#
 	# Login, start a session and set/return a session cookie
 	#
 	# Example curl command:
 	# curl -i -H "Content-Type: application/json" -X POST -d '{"username": "Casper", "password": "cr*ap"}'
-	#  	-c cookie-jar http://cs3103.cs.unb.ca:61340/signin
+	#  	-c cookie-jar http://cs3103.cs.unb.ca:50035/users/login
 	#
 	def post(self):
 		if not request.json:
@@ -81,13 +81,15 @@ class SignIn(Resource):
 
 		return make_response(jsonify(response), responseCode)
 
-	# GET: Check for a login
+class Logout(Resource):
+	# GET: Logout: remove session
 	#
 	# Example curl command:
 	# curl -i -H "Content-Type: application/json" -X GET -b cookie-jar
-	#	http://cs3103.cs.unb.ca:63847/signin
+	#	http://cs3103.cs.unb.ca:50035/users/logout
 	def get(self):
 		if 'username' in session:
+			session.pop('username', None)
 			response = {'status': 'success'}
 			responseCode = 200
 		else:
@@ -96,25 +98,90 @@ class SignIn(Resource):
 
 		return make_response(jsonify(response), responseCode)
 
-	# DELETE: Logout: remove session
+class Users(Resource):
+	# GET: getUsers: retrieves a list of all users
 	#
 	# Example curl command:
-	# curl -i -H "Content-Type: application/json" -X DELETE -b cookie-jar
-	#	http://cs3103.cs.unb.ca:63847/signin
-	def delete(self):
-		session.pop('username', None)
-		return {'status': 'i dont know'}
+	# curl -i -H "Content-Type: application/json" -X GET -b cookie-jar
+	#	http://cs3103.cs.unb.ca:50035/users?username=bob
+	def get(self):
+		if 'username' in session:
+			try:
+				dbConnection = pymysql.connect(
+					settings.DB_HOST,
+					settings.DB_USER,
+					settings.DB_PASSWD,
+					settings.DB_DATABASE,
+					charset='utf8mb4',
+					cursorclass= pymysql.cursors.DictCursor)
+				form = cgi.FieldStorage()
+				username = form.getvalue('username')
+				if username = '':
+					sql = 'getUsers'
+					cursor = dbConnection.cursor()
+					cursor.callproc(sql) 
+					rows = cursor.fetchall() # get all the results
+				else:
+					sql = 'getUserByName'
+					cursor = dbConnection.cursor()
+					sqlArgs = (username)
+					cursor.callproc(sql, sqlArgs)
+					row = cursor.fetchone() # get a single result
+					response = {'content': row}
+			except:
+				abort(500) # Nondescript server error
+			finally:
+				cursor.close()
+				dbConnection.close()
+				response = ({'users': rows}) # turn set into json and return it
+		else:
+			response = {'status': 'fail'}
+			responseCode = 403
 
+		return make_response(jsonify(response), responseCode)
+
+	# POST: SaveUser: adds a user to the DB
+	# 
+	# Example curl command:
+	# curl -i -H "Content-Type: application/json" -X POST -d '{"username": "bob"}'
+	#  	-c cookie-jar http://cs3103.cs.unb.ca:50035/users	
+	def post(self)	
+		if 'username' in session:
+			try:
+				dbConnection = pymysql.connect(
+					settings.DB_HOST,
+					settings.DB_USER,
+					settings.DB_PASSWD,
+					settings.DB_DATABASE,
+					charset='utf8mb4',
+					cursorclass= pymysql.cursors.DictCursor)
+				sql = 'saveUser'
+				cursor = dbConnection.cursor()
+				sqlArgs = ('username')
+				cursor.callproc(sql,sqlArgs)
+				response = cursor.fetchall()
+			except:
+				abort(500) # Nondescript server error
+			finally:
+				cursor.close()
+				dbConnection.close()
+			return make_response(jsonify({"school": row}), 200) # successful
+				responseCode = 200
+		else:
+			response = {'status': 'fail'}
+			responseCode = 403
+
+		return make_response(jsonify(response), responseCode)
 
 ####################################################################################
 #
 # Identify/create endpoints and endpoint objects
 #
 api = Api(app)
-api.add_resource(SignIn, '/signin')
-
+api.add_resource(Login, '/users/login')
+api.add_resource(Logout, '/users/logout')
+api.add_resource(Users, '/users')
 
 #############################################################################
-# xxxxx= last 5 digits of your studentid. If xxxxx > 65535, subtract 30000
 if __name__ == "__main__":
    	app.run(host=settings.APP_HOST, port=settings.APP_PORT, debug=settings.APP_DEBUG)

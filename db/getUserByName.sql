@@ -1,0 +1,8 @@
+DELIMITER //
+DROP PROCEDURE IF EXISTS getUsers //
+
+CREATE PROCEDURE getUserByName(IN usernameIn VARCHAR)
+BEGIN
+  SELECT * FROM users WHERE username = usernameIn;
+END //
+DELIMITER ;
