@@ -145,7 +145,7 @@ class Users(Resource):
 	# Example curl command:
 	# curl -i -H "Content-Type: application/json" -X POST -d '{"username": "bob"}'
 	#  	-c cookie-jar http://cs3103.cs.unb.ca:50035/users	
-	def post(self)	
+	def post(self):	
 		if 'username' in session:
 			try:
 				dbConnection = pymysql.connect(
