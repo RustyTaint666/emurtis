@@ -159,6 +159,7 @@ class Users(Resource):
 				sql = 'saveUser'
 				cursor = dbConnection.cursor()
 				cursor.callproc(sql,[username])
+				dbConnection.commit()
 				response = cursor.fetchall()
 			except:
 				abort(500) # Nondescript server error
