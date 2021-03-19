@@ -114,16 +114,15 @@ class Users(Resource):
 					settings.DB_DATABASE,
 					charset='utf8mb4',
 					cursorclass= pymysql.cursors.DictCursor)
+				cursor = dbConnection.cursor()
 				form = cgi.FieldStorage()
 				username = form.getvalue('username')
 				if username == '':
 					sql = 'getUsers'
-					cursor = dbConnection.cursor()
 					cursor.callproc(sql) 
 					rows = cursor.fetchall() # get all the results
 				else:
 					sql = 'getUserByName'
-					cursor = dbConnection.cursor()
 					sqlArgs = (username)
 					cursor.callproc(sql, sqlArgs)
 					row = cursor.fetchone() # get a single result
