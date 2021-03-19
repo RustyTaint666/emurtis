@@ -106,6 +106,7 @@ class Users(Resource):
 	# curl -i -H "Content-Type: application/json" -X GET -b cookie-jar
 	#	http://cs3103.cs.unb.ca:50035/users?username=bob
 	def get(self):
+		username = request.args.get('username')
 		if 'username' in session:
 			try:
 				dbConnection = pymysql.connect(
@@ -116,16 +117,14 @@ class Users(Resource):
 					charset='utf8mb4',
 					cursorclass= pymysql.cursors.DictCursor)
 				cursor = dbConnection.cursor()
-				form = cgi.FieldStorage()
-				username = form.getvalue('username')
-				if username == '':
+				if username is None:
 					sql = 'getUsers'
 					cursor.callproc(sql) 
 					rows = cursor.fetchall() # get all the results
+					response = {'users': rows} # turn set into json and return it
 				else:
 					sql = 'getUserByName'
-					sqlArgs = (username)
-					cursor.callproc(sql, sqlArgs)
+					cursor.callproc(sql, [username])
 					row = cursor.fetchone() # get a single result
 					response = {'content': row}
 			except:
@@ -133,7 +132,7 @@ class Users(Resource):
 			finally:
 				cursor.close()
 				dbConnection.close()
-				response = ({'users': rows}) # turn set into json and return it
+				responseCode = 200
 		else:
 			response = {'status': 'fail'}
 			responseCode = 403
