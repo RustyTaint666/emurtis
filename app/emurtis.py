@@ -116,7 +116,7 @@ class Users(Resource):
 					cursorclass= pymysql.cursors.DictCursor)
 				form = cgi.FieldStorage()
 				username = form.getvalue('username')
-				if username = '':
+				if username == '':
 					sql = 'getUsers'
 					cursor = dbConnection.cursor()
 					cursor.callproc(sql) 
