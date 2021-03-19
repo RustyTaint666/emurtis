@@ -3,6 +3,7 @@ import sys
 from flask import Flask, jsonify, abort, request, make_response, session
 from flask_restful import reqparse, Resource, Api
 from flask_session import Session
+import pymysql.cursors
 import json
 from ldap3 import Server, Connection, ALL
 from ldap3.core.exceptions import *
@@ -146,6 +147,7 @@ class Users(Resource):
 	#  	-c cookie-jar http://cs3103.cs.unb.ca:50035/users	
 	def post(self):	
 		if 'username' in session:
+			username = request.json['username']
 			try:
 				dbConnection = pymysql.connect(
 					settings.DB_HOST,
@@ -156,8 +158,7 @@ class Users(Resource):
 					cursorclass= pymysql.cursors.DictCursor)
 				sql = 'saveUser'
 				cursor = dbConnection.cursor()
-				sqlArgs = ('username')
-				cursor.callproc(sql,sqlArgs)
+				cursor.callproc(sql,[username])
 				response = cursor.fetchall()
 			except:
 				abort(500) # Nondescript server error
