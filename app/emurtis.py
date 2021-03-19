@@ -165,8 +165,7 @@ class Users(Resource):
 			finally:
 				cursor.close()
 				dbConnection.close()
-			return make_response(jsonify({"school": row}), 200) # successful
-				responseCode = 200
+				responseCode = 200 # successful
 		else:
 			response = {'status': 'fail'}
 			responseCode = 403
