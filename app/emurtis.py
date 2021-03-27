@@ -8,6 +8,7 @@ import json
 from ldap3 import Server, Connection, ALL
 from ldap3.core.exceptions import *
 import settings # Our server and db settings, stored in settings.py
+import ssl #include ssl libraries
 
 app = Flask(__name__)
 # Set Server-side session config: Save sessions in the local app directory.
@@ -182,4 +183,9 @@ api.add_resource(Users, '/users')
 
 #############################################################################
 if __name__ == "__main__":
-   	app.run(host=settings.APP_HOST, port=settings.APP_PORT, debug=settings.APP_DEBUG)
+	context = ('cert.pem', 'key.pem') # Identify the certificates you've generated.
+	app.run(
+		host=settings.APP_HOST,
+		port=settings.APP_PORT,
+		ssl_context=context,
+		debug=settings.APP_DEBUG)
