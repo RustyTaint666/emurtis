@@ -40,8 +40,7 @@ class Login(Resource):
 	# Login, start a session and set/return a session cookie
 	#
 	# Example curl command:
-	# curl -i -H "Content-Type: application/json" -X POST -d '{"username": "Casper", "password": "cr*ap"}'
-	#  	-c cookie-jar http://cs3103.cs.unb.ca:50035/users/login
+	# curl -i -H "Content-Type: application/json" -X POST -d '{"username": "me", "password": "pass"}' -c cookie-jar http://cs3103.cs.unb.ca:50035/users/login
 	#
 	def post(self):
 		if not request.json:
@@ -103,8 +102,7 @@ class Users(Resource):
 	# GET: getUsers: retrieves a list of all users
 	#
 	# Example curl command:
-	# curl -i -H "Content-Type: application/json" -X GET -b cookie-jar
-	#	http://cs3103.cs.unb.ca:50035/users?username=bob
+	# curl -i -H "Content-Type: application/json" -X GET -b cookie-jar http://cs3103.cs.unb.ca:50035/users?username=test
 	@app.route('/users')
 	def get():
 		username = request.args.get('username')
@@ -180,7 +178,7 @@ class Users(Resource):
 api = Api(app)
 api.add_resource(Login, '/users/login')
 api.add_resource(Logout, '/users/logout')
-api.add_resource(Users, '/users') #is something wrong here?
+api.add_resource(Users, '/users')
 
 #############################################################################
 if __name__ == "__main__":
