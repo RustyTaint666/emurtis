@@ -105,7 +105,8 @@ class Users(Resource):
 	# Example curl command:
 	# curl -i -H "Content-Type: application/json" -X GET -b cookie-jar
 	#	http://cs3103.cs.unb.ca:50035/users?username=bob
-	def get(self):
+	@app.route('/users')
+	def get():
 		username = request.args.get('username')
 		if 'username' in session:
 			try:
@@ -137,7 +138,7 @@ class Users(Resource):
 			response = {'status': 'fail'}
 			responseCode = 403
 
-		return make_response(jsonify(response), responseCode)
+		return make_response(jsonify(response), responseCode)	
 
 	# POST: SaveUser: adds a user to the DB
 	# 
@@ -179,7 +180,7 @@ class Users(Resource):
 api = Api(app)
 api.add_resource(Login, '/users/login')
 api.add_resource(Logout, '/users/logout')
-api.add_resource(Users, '/users')
+api.add_resource(Users, '/users') #is something wrong here?
 
 #############################################################################
 if __name__ == "__main__":
