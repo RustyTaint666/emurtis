@@ -172,6 +172,72 @@ class Users(Resource):
 
 		return make_response(jsonify(response), responseCode)
 
+class Videos(Resource):
+	# GET: getVideo: retrieves a single video
+	#
+	# Example curl command:
+	# curl -i -H "Content-Type: application/json" -X GET -b cookie-jar http://cs3103.cs.unb.ca:50035/users/<uid>/videos/<vid>
+	@app.route('/users/<int:userId>/videos/<int:videoId>')
+	def get(userId, videoId):
+		if 'username' in session:
+			try:
+				dbConnection = pymysql.connect(
+					settings.DB_HOST,
+					settings.DB_USER,
+					settings.DB_PASSWD,
+					settings.DB_DATABASE,
+					charset='utf8mb4',
+					cursorclass= pymysql.cursors.DictCursor)
+				cursor = dbConnection.cursor()
+				sql = 'getVideo'
+				cursor.callproc(sql, [videoId])
+				row = cursor.fetchone() # get a single result
+				response = {'video': row}
+			except:
+				abort(500) # Nondescript server error
+			finally:
+				cursor.close()
+				dbConnection.close()
+				responseCode = 200
+		else:
+			response = {'status': 'fail'}
+			responseCode = 403
+
+		return make_response(jsonify(response), responseCode)	
+
+	
+	# GET: getVideosByUserId: retrieves a list of all videos from one particular user
+	#
+	# Example curl command:
+	# curl -i -H "Content-Type: application/json" -X GET -b cookie-jar http://cs3103.cs.unb.ca:50035/users/{userId}/videos
+	@app.route('/users/<int:userId>/videos')
+	def get(userId):
+		if 'username' in session:
+			try:
+				dbConnection = pymysql.connect(
+					settings.DB_HOST,
+					settings.DB_USER,
+					settings.DB_PASSWD,
+					settings.DB_DATABASE,
+					charset='utf8mb4',
+					cursorclass= pymysql.cursors.DictCursor)
+				cursor = dbConnection.cursor()
+				sql = 'getVideosByUserId'
+				cursor.callproc(sql, [userId]) 
+				rows = cursor.fetchall() # get all the results
+				response = {'videos': rows} # turn set into json and return it
+			except:
+				abort(500) # Nondescript server error
+			finally:
+				cursor.close()
+				dbConnection.close()
+				responseCode = 200
+		else:
+			response = {'status': 'fail'}
+			responseCode = 403
+
+		return make_response(jsonify(response), responseCode)
+
 ####################################################################################
 #
 # Identify/create endpoints and endpoint objects
