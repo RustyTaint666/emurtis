@@ -3,6 +3,11 @@ import sys
 from flask import Flask, jsonify, abort, request, make_response, session
 from flask_restful import reqparse, Resource, Api
 from flask_session import Session
+from werkzeug import secure_filename
+import os
+import os.path
+import posixpath
+import pathlib
 from pathlib import Path
 import pymysql.cursors
 import json
@@ -186,21 +191,22 @@ class Videos(Resource):
 	@app.route('/users/<int:userId>/videos', methods=['POST'])
 	def postVideo(userId):	
 		if 'username' in session:
-			username = request.json['username']
+			#username = request.json['username']
 			try:
-				#make the path first
-				uploadVid = request.files['file']
-				savePath = "/videos"
-				Path(savePath).mkdir(parents=True, exist_ok=True)
+				#get the file from the input curl command
+				uploadVid = request.files['video']
 				if (uploadVid.filename != ''):
-					uploadVid.save(uploadVid.filename)
-				
-				#this places the video in the designated path
-				save(savePath)
+					#this places the video in the correct '/videos' path, creating it if needed
+					dirName = pathlib.Path(__file__).parent.absolute()
+					vidDir = dirName / settings.UPLOAD_DIR
+					Path(vidDir).mkdir(parents=True, exist_ok=True)
+					fileDir = os.path.join(dirName, vidDir)
+					fileDir = os.path.join(fileDir, secure_filename(uploadVid.filename))
+					uploadVid.save(fileDir)
 
-				#getting json stuff
-				videoName = request.json['videoName']
-				videoDesc = request.json['videoDesc']
+				#getting video metadata
+				videoName = request.headers['vidName']
+				videoDesc = request.headers['vidDesc']
 
 				#after path has been made (and video placed in it)
 				dbConnection = pymysql.connect(
@@ -212,7 +218,7 @@ class Videos(Resource):
 					cursorclass= pymysql.cursors.DictCursor)
 				sql = 'saveVideo'
 				cursor = dbConnection.cursor()
-				cursor.callproc(sql,[userId, videoName, savePath, videoDesc]) #need userId, videoName, videoPath, videoDescription
+				cursor.callproc(sql,[userId, videoName, fileDir, videoDesc]) #need userId, videoName, videoPath, videoDescription
 				dbConnection.commit()
 				response = cursor.fetchall()
 			except BadRequest as e:
