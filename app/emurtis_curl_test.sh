@@ -11,4 +11,6 @@ curl -i -H "Content-Type: application/json" -X GET -b cookie-jar -k https://cs31
 
 curl -i -H "Content-Type: application/json" -X GET -b cookie-jar -k https://cs3103.cs.unb.ca:50035/users/1/videos
 
+curl -i -H "Content-Type: application/json" -X DELETE -b cookie-jar -k https://cs3103.cs.unb.ca:50035/users/1/videos/1
+
 curl -i -H "Content-Type: application/json" -X GET -b cookie-jar -k https://cs3103.cs.unb.ca:50035/users/logout
