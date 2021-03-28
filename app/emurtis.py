@@ -3,12 +3,14 @@ import sys
 from flask import Flask, jsonify, abort, request, make_response, session
 from flask_restful import reqparse, Resource, Api
 from flask_session import Session
+from pathlib import Path
 import pymysql.cursors
 import json
 from ldap3 import Server, Connection, ALL
 from ldap3.core.exceptions import *
 import settings # Our server and db settings, stored in settings.py
 import ssl #include ssl libraries
+from werkzeug.exceptions import BadRequest, NotFound # BadRequest exception for exception handling
 
 app = Flask(__name__)
 # Set Server-side session config: Save sessions in the local app directory.
@@ -127,6 +129,8 @@ class Users(Resource):
 					cursor.callproc(sql, [username])
 					row = cursor.fetchone() # get a single result
 					response = {'content': row}
+			except BadRequest as e:
+				abort(400)
 			except:
 				abort(500) # Nondescript server error
 			finally:
@@ -160,6 +164,59 @@ class Users(Resource):
 				cursor.callproc(sql,[username])
 				dbConnection.commit()
 				response = cursor.fetchall()
+			except BadRequest as e:
+				abort(400)
+			except:
+				abort(500) # Nondescript server error
+			finally:
+				cursor.close()
+				dbConnection.close()
+				responseCode = 201 # successful
+		else:
+			response = {'status': 'fail'}
+			responseCode = 403
+
+		return make_response(jsonify(response), responseCode)
+
+class Videos(Resource):
+	# POST: SaveVideo: Saves a given video to the media path and the path to the DB
+	# 
+	# Example curl command for users:
+	# curl -i -H "Content-Type: application/json" -X POST -d '{"username": "bob"}' -c cookie-jar http://cs3103.cs.unb.ca:50035/users	
+	@app.route('/users/<int:userId>/videos', methods=['POST'])
+	def postVideo(userId):	
+		if 'username' in session:
+			username = request.json['username']
+			try:
+				#make the path first
+				uploadVid = request.files['file']
+				savePath = "/videos"
+				Path(savePath).mkdir(parents=True, exist_ok=True)
+				if (uploadVid.filename != ''):
+					uploadVid.save(uploadVid.filename)
+				
+				#this places the video in the designated path
+				save(savePath)
+
+				#getting json stuff
+				videoName = request.json['videoName']
+				videoDesc = request.json['videoDesc']
+
+				#after path has been made (and video placed in it)
+				dbConnection = pymysql.connect(
+					settings.DB_HOST,
+					settings.DB_USER,
+					settings.DB_PASSWD,
+					settings.DB_DATABASE,
+					charset='utf8mb4',
+					cursorclass= pymysql.cursors.DictCursor)
+				sql = 'saveVideo'
+				cursor = dbConnection.cursor()
+				cursor.callproc(sql,[userId, videoName, savePath, videoDesc]) #need userId, videoName, videoPath, videoDescription
+				dbConnection.commit()
+				response = cursor.fetchall()
+			except BadRequest as e:
+				abort(400)
 			except:
 				abort(500) # Nondescript server error
 			finally:
@@ -172,13 +229,12 @@ class Users(Resource):
 
 		return make_response(jsonify(response), responseCode)
 
-class Videos(Resource):
 	# GET: getVideo: retrieves a single video
 	#
 	# Example curl command:
 	# curl -i -H "Content-Type: application/json" -X GET -b cookie-jar http://cs3103.cs.unb.ca:50035/users/<uid>/videos/<vid>
 	@app.route('/users/<int:userId>/videos/<int:videoId>')
-	def get(userId, videoId):
+	def getVideo(userId, videoId):
 		if 'username' in session:
 			try:
 				dbConnection = pymysql.connect(
@@ -192,7 +248,14 @@ class Videos(Resource):
 				sql = 'getVideo'
 				cursor.callproc(sql, [videoId])
 				row = cursor.fetchone() # get a single result
-				response = {'video': row}
+				if row:
+					response = {'video': row}
+				else:
+					raise NotFound()
+			except BadRequest as e:
+				abort(400)
+			except NotFound as e:
+				abort(404)
 			except:
 				abort(500) # Nondescript server error
 			finally:
@@ -211,7 +274,7 @@ class Videos(Resource):
 	# Example curl command:
 	# curl -i -H "Content-Type: application/json" -X GET -b cookie-jar http://cs3103.cs.unb.ca:50035/users/{userId}/videos
 	@app.route('/users/<int:userId>/videos')
-	def get(userId):
+	def getVideosByUserId(userId):
 		if 'username' in session:
 			try:
 				dbConnection = pymysql.connect(
@@ -225,13 +288,60 @@ class Videos(Resource):
 				sql = 'getVideosByUserId'
 				cursor.callproc(sql, [userId]) 
 				rows = cursor.fetchall() # get all the results
-				response = {'videos': rows} # turn set into json and return it
+				if rows:
+					response = {'videos': rows} # turn set into json and return it
+				else:
+					raise NotFound()
+			except BadRequest as e:
+				abort(400)
+			except NotFound as e:
+				abort(404)
 			except:
 				abort(500) # Nondescript server error
 			finally:
 				cursor.close()
 				dbConnection.close()
 				responseCode = 200
+		else:
+			response = {'status': 'fail'}
+			responseCode = 403
+
+		return make_response(jsonify(response), responseCode)
+	
+	# DELETE: deleteVideo: delete a single video
+	#
+	# Example curl command:
+	# curl -i -H "Content-Type: application/json" -X DELETE -b cookie-jar http://cs3103.cs.unb.ca:50035/users/<uid>/videos/<vid>
+	@app.route('/users/<int:userId>/videos/<int:videoId>', methods=["DELETE"])
+	def deleteVideo(userId, videoId):
+		if 'username' in session:
+			try:
+				dbConnection = pymysql.connect(
+					settings.DB_HOST,
+					settings.DB_USER,
+					settings.DB_PASSWD,
+					settings.DB_DATABASE,
+					charset='utf8mb4',
+					cursorclass= pymysql.cursors.DictCursor)
+				cursor = dbConnection.cursor()
+				sql = 'deleteVideo'
+				cursor.callproc(sql, [videoId])
+				dbConnection.commit()
+				if cursor.rowcount > 0:
+					responseCode = 204
+					response = {'status': 'success'} # turn set into json and return it
+				else:
+					raise NotFound()
+			except BadRequest as e:
+				abort(400)
+			except NotFound as e:
+				abort(404)
+			except:
+				abort(500) # Nondescript server error
+			finally:
+				cursor.close()
+				dbConnection.close()
+				responseCode = 204
 		else:
 			response = {'status': 'fail'}
 			responseCode = 403
