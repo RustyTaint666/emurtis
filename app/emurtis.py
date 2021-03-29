@@ -331,6 +331,15 @@ class Videos(Resource):
 					charset='utf8mb4',
 					cursorclass= pymysql.cursors.DictCursor)
 				cursor = dbConnection.cursor()
+				sql = 'getVideo'
+				cursor.callproc(sql, [videoId])
+				row = cursor.fetchone()
+				if row:
+					videoFilePath = row['video']
+					if os.path.exists(videoFilePath):
+						os.remove(videoFilePath)
+
+				cursor = dbConnection.cursor()
 				sql = 'deleteVideo'
 				cursor.callproc(sql, [videoId])
 				dbConnection.commit()
