@@ -187,7 +187,8 @@ class Videos(Resource):
 	# POST: SaveVideo: Saves a given video to the media path and the path to the DB
 	# 
 	# Example curl command for users:
-	# curl -i -H "Content-Type: application/json" -X POST -d '{"username": "bob"}' -c cookie-jar http://cs3103.cs.unb.ca:50035/users	
+	# curl -i -X POST -H "vidName: bigName" -H  "vidDesc: desc" -F "video=@<full_path_to_file>" 
+	# 	-b cookie-jar -k https://cs3103.cs.unb.ca:50035/users/1/videos
 	@app.route('/users/<int:userId>/videos', methods=['POST'])
 	def postVideo(userId):	
 		if 'username' in session:
