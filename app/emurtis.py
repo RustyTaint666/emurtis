@@ -41,6 +41,14 @@ def not_found(error):
 
 ####################################################################################
 #
+# Static Endpoints
+#
+class Root(Resource):
+	def get(self):
+		return app.send_static_file('index.html')
+
+####################################################################################
+#
 # Routing: GET and POST using Flask-Session
 #
 class Login(Resource):
@@ -369,6 +377,7 @@ class Videos(Resource):
 # Identify/create endpoints and endpoint objects
 #
 api = Api(app)
+api.add_resource(Root,'/')
 api.add_resource(Login, '/users/login')
 api.add_resource(Logout, '/users/logout')
 api.add_resource(Users, '/users')

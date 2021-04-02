@@ -15,25 +15,24 @@ var app = new Vue({
         // stuff goes here
         login() {
             if (this.input.username != "" && this.input.password != "") {
-              axios
-              .post(this.serviceURL+"/users/login", {
-                  "username": this.input.username,
-                  "password": this.input.password
+              axios(this.serviceURL+"/users/login", {
+                method: 'POST',
+                headers: {
+                  'content-type': 'application/json',
+                },
+                data: {
+                    "username": this.input.username,
+                    "password": this.input.password
+                },
               })
-              .then(response => {
-                  if (response.data.status == "success") {
-                    this.authenticated = true;
-                    axios
-                    .post(this.serviceURL+"/users", {
-                        "username": this.input.username
-                    })
-                  }
-              })
-              .catch(e => {
-                  alert("The username or password was incorrect, try again");
-                  this.input.password = "";
-                  console.log(e);
-              });
+                .then(response => {
+                    if (response.data.status == "success") {
+                        this.authenticated = true;
+                    }
+                })
+                .catch(error => {
+                  throw error;
+                });
             } else {
               alert("A username and password must be present");
             }
