@@ -87,7 +87,19 @@ class Login(Resource):
 				ldapConnection.bind()
 				# At this point we have sucessfully authenticated.
 				session['username'] = request_params['username']
-				response = {'status': 'success' }
+				dbConnection = pymysql.connect(
+					settings.DB_HOST,
+					settings.DB_USER,
+					settings.DB_PASSWD,
+					settings.DB_DATABASE,
+					charset='utf8mb4',
+					cursorclass= pymysql.cursors.DictCursor)
+				cursor = dbConnection.cursor()
+				username = session['username']
+				sql = 'getUserByName'
+				cursor.callproc(sql, [username])
+				row = cursor.fetchone() # get a single result
+				response = {'status': 'success', 'user_id': row['user_id'] }
 				responseCode = 201
 			except LDAPException as error_message:
 				response = {'status': 'Access denied'}

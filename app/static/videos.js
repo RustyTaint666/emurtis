@@ -13,6 +13,11 @@ var app = new Vue({
         username: "",
         password: ""
       },
+      updateVideo: {
+        name: "",
+        description: "",
+        videoFile: null,
+      },
     },
     methods: {
         // stuff goes here
@@ -31,6 +36,7 @@ var app = new Vue({
                 .then(response => {
                     if (response.data.status == "success") {
                         this.authenticated = true;
+                        this.loggedIn = response.data.user_id;
                         this.createUser(this.input.username);
                         this.getUsers();
                     }
@@ -74,7 +80,6 @@ var app = new Vue({
             .get(this.serviceURL+"/users")
             .then(response => {
               this.usersData = response.data.users;
-
             })
             .catch(error => {
               console.log(error);
@@ -86,11 +91,52 @@ var app = new Vue({
           .get(this.serviceURL+"/users/"+ user_id +"/videos")
           .then(response => {
             this.videosData = response.data.videos;
-            //Vue.set(this.videosData, user_id, response.data.videos)
           })
           .catch(error => {
             console.log(error);
           })
-        }
+        },
+
+        deleteVideo(video_id) {
+          axios
+          .delete(this.serviceURL+"/users/"+this.loggedIn+"/videos/"+video_id)
+          .then(response => {
+            if (response.status === 204) {
+              this.getVideosByUserId(this.loggedIn);
+              alert("Video successfully deleted.");
+            }
+          })
+          .catch(error => {
+            console.log(error);
+          })
+        },
+
+        handleFileUpload(e) {
+          var file = e.target.files || e.dataTransfer.files;
+          videoFile = file;
+        },
+
+        postVideo(user_id, updateVideo) {
+          var bodyFormData = new FormData();
+          bodyFormData.append('video', videoFile);
+
+          axios({
+            method: "post",
+            url: this.serviceURL+"/users/"+ user_id +"/videos",
+            data: bodyFormData,
+            headers: { 
+              "Content-Type": "multipart/form-data", 
+              'vidName': updateVideo.name,
+              'vidDesc': updateVideo.description 
+            },
+          })
+          .then(response => {
+            alert("Video successfully created.");
+          })
+          .catch(error => {
+            console.log(error);
+          })
+
+        },
     }
 });
