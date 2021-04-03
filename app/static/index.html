@@ -1,29 +1,128 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Emurtis Video Service</title>
-    </head>
-    <body>
-        <div class="container-fluid" id="app">
-          <div class="jumbotron jumbotron-fluid text-center">
-            <h1>Welcome to Emurtis Video Service<sup><small>TM</small></sup></sup></h1>
-            <p><em>Your source for uploading and viewing videos!</em></p>
+
+<head>
+	<title>Emurtis Video Service</title>
+</head>
+
+<body>
+	<div class="container-fluid" id="app">
+		<div class="jumbotron jumbotron-fluid text-center">
+			<h1>Welcome to Emurtis Video Service<sup><small>TM</small></sup></sup></h1>
+			<p><em>Your source for uploading and viewing videos!</em>
+			</p>
+			<div v-if="!authenticated" class="form-group text-center">
+				<input class="col-4 mx-auto form-control" type="text" name="username" v-model="input.username" placeholder="Username" />
+				<input class="col-4 mx-auto form-control" type="password" name="password" v-model="input.password" placeholder="Password" />
+				<button class="col-4 btn btn-outline-success" type="button" v-on:click="login()">Login</button>
+			</div>
+			<div v-else class="text-center">
+				<button type="button" class="btn btn-outline-danger" v-on:click="logout()">Logout</button>
+			</div>
+		</div>
+		<div v-if="authenticated">
+			<div v-if="usersData != null">
+        <!-- Carousel wrapper -->
+        <div id="userCarousel" class="carousel slide carousel-dark text-center" data-ride="carousel">
+          <!-- Controls -->
+          <a class="left carousel-control" href="#userCarousel" data-slide="prev">
+            <button type="button" class="btn btn-default btn-md">Left</button>
+          </a>
+          <a class="right carousel-control" href="#userCarousel" data-slide="next">
+            <button type="button" class="btn btn-default btn-md">Right</button>
+          </a>
+						<!-- Inner -->
+          <div class="carousel-inner">
+            <div class="carousel-item active">
+              <div class="container">
+                <div class="row">
+                  <div class="col">
+                    <div class="card">
+                      <div class="card-body">
+                        <h5 class="card-title">{{ usersData[0].username }}</h5>
+                        <a href="#!" class="btn btn-primary">Load videos</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div v-for="(users, index) in usersData" v-if="index >= 1">
+              <div class="carousel-item">
+                <div class="container">
+                  <div class="row">
+                    <div class="col">
+                      <div class="card">
+                        <div class="card-body">
+                          <h5 class="card-title">{{ users.username }}</h5>
+                          <a href="#!" class="btn btn-primary">Load videos</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div v-if="!authenticated" class="form-group text-center">
-            <input class="col-4 mx-auto form-control" type="text" name="username" v-model="input.username" placeholder="Username" />
-            <input class="col-4 mx-auto form-control" type="password" name="password" v-model="input.password" placeholder="Password" />
-            <button class="col-4 btn btn-outline-success" type="button" v-on:click="login()">Login</button>
-          </div>
-          <div v-else class="text-center">
-            <button type="button" class="btn btn-outline-danger" v-on:click="logout()">Logout</button>
+        </div> 
+        <!-- Videos Carousel -->
+        <div v-if="videoData != null">
+          <!-- Carousel wrapper -->
+          <div id="videoCarousel" class="carousel slide carousel-dark text-center" data-ride="carousel">
+            <!-- Controls -->
+            <a class="left carousel-control" href="#videoCarousel" data-slide="prev">
+              <button type="button" class="btn btn-default btn-md">Left</button>
+            </a>
+            <a class="right carousel-control" href="#videoCarousel" data-slide="next">
+              <button type="button" class="btn btn-default btn-md">Right</button>
+            </a>
+            <!-- Inner -->
+            <div class="carousel-inner">
+              <!-- First video needs to be carousel-item active -->
+              <div class="carousel-item active">
+                <div class="container">
+                  <div class="row">
+                    <div class="col">
+                      <div class="card">
+                        <div class="card-body">
+                          <h5 class="card-title">{{ videosData[0].name }}</h5>
+                          <a href="#!" class="btn btn-primary">watch</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- All other videos will be set to carousel-item (not active) -->
+              <div v-for="(videos, index) in videosData" v-if="index >= 1">
+                <div class="carousel-item">
+                  <div class="container">
+                    <div class="row">
+                      <div class="col">
+                        <div class="card">
+                          <div class="card-body">
+                            <h5 class="card-title">{{ videoData.name }}</h5>
+                            <a href="#!" class="btn btn-primary">watch</a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.js"></script>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"/>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
-        <script type="text/javascript" src="/static/videos.js" ></script>
-        <link rel="stylesheet" href="/static/videos.css"/>
-    </body>
+			</div>
+		</div>
+	</div>
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" />
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/static/videos.js"></script>
+	<link rel="stylesheet" href="/static/videos.css" />
+</body>
+
 </html>

@@ -89,7 +89,7 @@ class Login(Resource):
 				session['username'] = request_params['username']
 				response = {'status': 'success' }
 				responseCode = 201
-			except (LDAPException, error_message):
+			except LDAPException as error_message:
 				response = {'status': 'Access denied'}
 				responseCode = 403
 			finally:
@@ -176,7 +176,8 @@ class Users(Resource):
 				cursor = dbConnection.cursor()
 				cursor.callproc(sql,[username])
 				dbConnection.commit()
-				response = cursor.fetchall()
+				row = cursor.fetchone()
+				response = { 'user_id': row['LAST_INSERT_ID()'] }
 			except BadRequest as e:
 				abort(400)
 			except:
@@ -200,7 +201,6 @@ class Videos(Resource):
 	@app.route('/users/<int:userId>/videos', methods=['POST'])
 	def postVideo(userId):	
 		if 'username' in session:
-			#username = request.json['username']
 			try:
 				#get the file from the input curl command
 				uploadVid = request.files['video']
