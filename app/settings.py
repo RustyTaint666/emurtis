@@ -1,6 +1,6 @@
 #/usr/bin/env python
 APP_HOST = 'cs3103.cs.unb.ca'
-APP_PORT = 50035 #konner's port is 50035
+APP_PORT = 50036 #konner's port is 50035
 APP_DEBUG = True
 
 DB_HOST = 'localhost'

@@ -3,11 +3,13 @@ var app = new Vue({
   
     //------- data --------
     data: {
-      serviceURL: "https://cs3103.cs.unb.ca:50035",
+      serviceURL: "https://cs3103.cs.unb.ca:50036",
       authenticated: false,
       loggedIn: null,
       usersData: null,
       videosData: null,
+      videoPath: null,
+      videoFormat: null,
 
       input: {
         username: "",
@@ -90,7 +92,11 @@ var app = new Vue({
           axios
           .get(this.serviceURL+"/users/"+ user_id +"/videos")
           .then(response => {
-            this.videosData = response.data.videos;
+            if (response.status === 404) {
+              this.videosData = null; //this isnt working to refresh when the last video is deleted
+            } else {
+              this.videosData = response.data.videos;
+            }
           })
           .catch(error => {
             console.log(error);
@@ -118,12 +124,10 @@ var app = new Vue({
 
         postVideo(user_id, updateVideo) {
           var bodyFormData = new FormData();
-          bodyFormData.append('video', videoFile);
+          bodyFormData.append('videoFile', videoFile[0]);
 
-          axios({
-            method: "post",
-            url: this.serviceURL+"/users/"+ user_id +"/videos",
-            data: bodyFormData,
+          axios
+          .post(this.serviceURL+"/users/"+ user_id +"/videos", bodyFormData, {
             headers: { 
               "Content-Type": "multipart/form-data", 
               'vidName': updateVideo.name,
@@ -131,12 +135,19 @@ var app = new Vue({
             },
           })
           .then(response => {
-            alert("Video successfully created.");
+            if (response.status === 201) {
+              alert("Video successfully created.");
+            }
           })
           .catch(error => {
             console.log(error);
           })
 
         },
+
+        setVideoPath(videoFilePath) {
+          this.videoFormat = videoFilePath.split(".")[1];
+          this.videoPath = this.serviceURL + videoFilePath.split("/app")[1];
+        }
     }
 });

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import sys
-from flask import Flask, jsonify, abort, request, make_response, session
+from flask import Flask, jsonify, abort, request, make_response, session, send_file
 from flask_restful import reqparse, Resource, Api
 from flask_session import Session
 from werkzeug import secure_filename
@@ -46,6 +46,32 @@ def not_found(error):
 class Root(Resource):
 	def get(self):
 		return app.send_static_file('index.html')
+
+class Video(Resource):
+	@app.route('/videos/<fileName>')
+	def getVideoResource(fileName):
+		if 'username' in session:
+			try:
+				mimetypes = {
+					".mp4": "video/mp4",
+					".webm": "video/webm",
+					".ogg": "video/ogg",
+				}
+				dirName = pathlib.Path(__file__).parent.absolute()
+				rootDir = dirName / settings.UPLOAD_DIR
+				complete_path = os.path.join(rootDir, fileName)
+				ext = os.path.splitext(fileName)[1]
+				mimetype = mimetypes.get(ext, "text/html")
+				content = open(complete_path, 'r+b')
+				return send_file(content, mimetype=mimetype)
+			except:
+				abort(500)
+		else:
+			response = {'status': 'fail'}
+			responseCode = 403
+
+		return make_response(jsonify(response), responseCode)
+
 
 ####################################################################################
 #
@@ -215,7 +241,7 @@ class Videos(Resource):
 		if 'username' in session:
 			try:
 				#get the file from the input curl command
-				uploadVid = request.files['video']
+				uploadVid = request.files['videoFile']
 				if (uploadVid.filename != ''):
 					#this places the video in the correct '/videos' path, creating it if needed
 					dirName = pathlib.Path(__file__).parent.absolute()
@@ -228,7 +254,6 @@ class Videos(Resource):
 				#getting video metadata
 				videoName = request.headers['vidName']
 				videoDesc = request.headers['vidDesc']
-
 				#after path has been made (and video placed in it)
 				dbConnection = pymysql.connect(
 					settings.DB_HOST,
@@ -244,12 +269,12 @@ class Videos(Resource):
 				response = cursor.fetchall()
 			except BadRequest as e:
 				abort(400)
-			except:
+			except e as e:
 				abort(500) # Nondescript server error
 			finally:
 				cursor.close()
 				dbConnection.close()
-				responseCode = 200 # successful
+				responseCode = 201 # successful
 		else:
 			response = {'status': 'fail'}
 			responseCode = 403

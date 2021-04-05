@@ -20,11 +20,10 @@
 				<button type="button" class="btn btn-outline-danger" v-on:click="logout()">Logout</button>
 			</div>
 		</div>
-		<div v-if="authenticated">
-
+    <div v-if="authenticated">
       <div class="container">
         <p>Select a video file to upload:</p>
-        <input type="file" id="vidFileInput" name="vidFile" v-on:change="handleFileUpload" accept=".wav, .mp4, .webm">
+        <input type="file" id="videoFile" name="videoFile" v-on:change="handleFileUpload" accept=".ogg, .mp4, .webm">
         <p>Video name:</p>
         <input type="text" id="vidName" v-model="updateVideo.name">
         <p>Video description:</p>
@@ -51,14 +50,31 @@
               <div class="d-flex w-100 justify-content-between">
                 {{video.name}} {{video.description}}
                 <div class="btn-group-xs">
-                  <button class="button">Watch</button>
+                  <button class="button" v-on:click="setVideoPath(video.video)">Watch</button>
                   <button v-if="video.user_id == loggedIn" class="utilityBtn text-danger" v-on:click="deleteVideo(video.video_id)">x</button>
                 </div>
               </div>
             </li>
           </div>
+      </div>
+      <div v-if="videoPath != null">
+        <div v-if="videoFormat == 'mp4'">
+          <video width="320" height="240" controls :key="videoPath">
+            <source :src="videoPath" type="video/mp4">
+          </video>
         </div>
-		</div>
+        <div v-if="videoFormat == 'webm'">
+          <video width="320" height="240" controls :key="videoPath">
+            <source :src="videoPath" type="video/webm">
+          </video>
+        </div>
+        <div v-if="videoFormat == 'ogg'">
+          <video width="320" height="240" controls :key="videoPath">
+            <source :src="videoPath" type="video/ogg">
+          </video>
+        </div>
+      </div>
+    </div>
 	</div>
 	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.js"></script>
