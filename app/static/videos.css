@@ -28,7 +28,6 @@
     flex-direction: column;
   }
   
-  .modal-header,
   .modal-footer {
     padding: 15px;
     display: flex;

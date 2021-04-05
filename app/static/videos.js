@@ -1,3 +1,12 @@
+// register modal component
+Vue.component("edit-modal", {
+  template: "#edit-modal-template"
+});
+
+Vue.component("view-modal", {
+  template: "#view-modal-template"
+});
+
 var app = new Vue({
     el: "#app",
   
@@ -10,6 +19,9 @@ var app = new Vue({
       videosData: null,
       videoPath: null,
       videoFormat: null,
+      editModal: false,
+      viewModal: false,
+      selectedVideo: null,
 
       input: {
         username: "",
@@ -145,9 +157,31 @@ var app = new Vue({
 
         },
 
+        watchVideo(video) {
+          this.showViewModal();
+          this.setVideoPath(video.video);
+          this.selectedVideo = video;
+        },
+
         setVideoPath(videoFilePath) {
           this.videoFormat = videoFilePath.split(".")[1];
           this.videoPath = this.serviceURL + videoFilePath.split("/app")[1];
-        }
+        },
+
+        showEditModal() {
+          this.editModal = true;
+        },
+
+        hideEditModal() {
+          this.editModal = false;
+        },
+
+        showViewModal() {
+          this.viewModal = true;
+        },
+
+        hideViewModal() {
+          this.viewModal = false;
+        },
     }
 });

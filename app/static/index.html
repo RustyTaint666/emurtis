@@ -17,20 +17,11 @@
 				<button class="col-4 btn btn-outline-success" type="button" v-on:click="login()">Login</button>
 			</div>
 			<div v-else class="text-center">
-				<button type="button" class="btn btn-outline-danger" v-on:click="logout()">Logout</button>
+        <button type="button" class="btn btn-outline-danger" v-on:click="logout()">Logout</button>
+        <button type="button" class="btn btn-outline-primary" v-on:click="showEditModal()">Create Video</button>
 			</div>
-		</div>
+    </div>
     <div v-if="authenticated">
-      <div class="container">
-        <p>Select a video file to upload:</p>
-        <input type="file" id="videoFile" name="videoFile" v-on:change="handleFileUpload" accept=".ogg, .mp4, .webm">
-        <p>Video name:</p>
-        <input type="text" id="vidName" v-model="updateVideo.name">
-        <p>Video description:</p>
-        <input type="text" id="vidDesc" v-model="updateVideo.description"></br></br>
-        <button class="button" v-on:click="postVideo(loggedIn, updateVideo)">Post Video</button>
-      </div>
-
       <div class="listWrapper">
         <div v-if="usersData != null" class="list">
           <ul class="list-group">
@@ -80,7 +71,7 @@
                     {{video.description}}
                   </span>
                   <div class="btn-group-xs">
-                    <button class="button" v-on:click="setVideoPath(video.video)">Watch</button>
+                    <button class="button" v-on:click="watchVideo(video)">Watch</button>
                     <button v-if="video.user_id == loggedIn" class="utilityBtn text-danger" v-on:click="deleteVideo(video.video_id)">x</button>
                   </div>
                 </div>
@@ -89,25 +80,129 @@
           </ul>
         </div>
       </div>
-
-      <div v-if="videoPath != null">
-        <div v-if="videoFormat == 'mp4'">
-          <video width="320" height="240" controls :key="videoPath">
-            <source :src="videoPath" type="video/mp4">
-          </video>
+      <view-modal v-if="viewModal" @close="hideViewModal">
+        <div slot="header" class="modal-header">
+          <h3>
+            {{ selectedVideo.name }}
+          </h3>
         </div>
-        <div v-if="videoFormat == 'webm'">
-          <video width="320" height="240" controls :key="videoPath">
-            <source :src="videoPath" type="video/webm">
-          </video>
+        <div slot="body">
+          <div v-if="videoPath != null">
+            <div style="text-align:center;">
+              <div v-if="videoFormat == 'mp4'">
+                <video width="1000" height="600" controls :key="videoPath">
+                  <source :src="videoPath" type="video/mp4">
+                </video>
+              </div>
+              <div v-if="videoFormat == 'webm'">
+                <video width="1000" height="600" controls :key="videoPath">
+                  <source :src="videoPath" type="video/webm">
+                </video>
+              </div>
+              <div v-if="videoFormat == 'ogg'">
+                <video width="1000" height="600" controls :key="videoPath">
+                  <source :src="videoPath" type="video/ogg">
+                </video>
+              </div>
+            </div>
+          </div>
         </div>
-        <div v-if="videoFormat == 'ogg'">
-          <video width="320" height="240" controls :key="videoPath">
-            <source :src="videoPath" type="video/ogg">
-          </video>
+        <div slot="footer">
+          <button type="button" class="btn btn-secondary" v-on:click="hideViewModal()">Close</button>
         </div>
-      </div>
+      </view-modal>
+      <edit-modal v-if="editModal" @close="hideEditModal">
+        <div slot="header" class="modal-header">
+          Create Video
+        </div>
+        <div slot="body">
+          <div class="form-group col-3">
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text  modal-prepend">Video Name</span>
+              </div>
+              <input class="col-8 form-control" type="text" id="vidName" v-model="updateVideo.name" placeholder="Video Name" />
+            </div>
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text modal-prepend">Description</span>
+              </div>
+              <input class="col-8 form-control" type="text" id="vidDesc" v-model="updateVideo.description" placeholder="Video Description" />
+            </div>
+            <div class="input-group mb-3">
+              <div class="custom-file">
+                <input type="file" id="videoFile" name="videoFile" v-on:change="handleFileUpload" accept=".ogg, .mp4, .webm">
+                <label class="custom-file-label" for="videoFile">Choose file</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div slot="footer">
+          <button type="button" class="btn btn-green" v-on:click="postVideo(loggedIn, updateVideo)">Save</button>
+          <button type="button" class="btn btn-secondary" v-on:click="hideEditModal()">Close</button>
+        </div>
+      </edit-modal>
     </div>
+    <!-- template for the edit modal component -->
+    <script type="text/x-template" id="edit-modal-template">
+      <transition name="modal">
+        <div class="modal-backdrop">
+        <div class="modal">
+          <header class="modal-header">
+            <slot name="header">
+              This is the default tile!
+              <button type="button" class="btn-close" @click="hideEditModal()">
+                x
+              </button>
+            </slot>
+          </header>
+          <section class="modal-body">
+            <slot name="body">
+              I'm the default body!
+            </slot>
+           </section>
+           <footer class="modal-footer">
+              <slot name="footer">
+                I'm the default footer!
+                <button type="button" class="btn-green" @click="hideEditModal()">
+                  Close me!
+                </button>
+              </slot>
+            </footer>
+          </div>
+        </div>
+      </transition>
+    </script>
+    <!-- template for the view modal component -->
+    <script type="text/x-template" id="view-modal-template">
+      <transition name="modal">
+        <div class="modal-backdrop">
+        <div class="modal">
+          <header class="modal-header">
+            <slot name="header">
+              This is the default tile!
+              <button type="button" class="btn-close" @click="hideViewModal()">
+                x
+              </button>
+            </slot>
+          </header>
+          <section class="modal-body">
+            <slot name="body">
+              I'm the default body!
+            </slot>
+            </section>
+            <footer class="modal-footer">
+              <slot name="footer">
+                I'm the default footer!
+                <button type="button" class="btn-green" @click="hideViewModal()">
+                  Close me!
+                </button>
+              </slot>
+            </footer>
+          </div>
+        </div>
+      </transition>
+    </script>
 	</div>
 	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.js"></script>
