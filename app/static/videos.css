@@ -71,4 +71,31 @@
     border: 1px solid #4AAE9B;
     border-radius: 2px;
   }
+
+  .listWrapper {
+    overflow: hidden;
+  }
+
+  .list {
+    float: left;
+    width: 50%;
+    text-align: center;
+  }
   
+  .listTextV {
+    margin-left: 5px;
+    margin-right: 5px;
+    text-align: center;
+    width: 30%;
+  }
+
+  .listTextU {
+    margin-left: 5px;
+    margin-right: 5px;
+    text-align: center;
+    width: 65%;
+  }
+
+  .btnFiller {
+    width: 69px;
+  }
