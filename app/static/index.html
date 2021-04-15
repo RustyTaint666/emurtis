@@ -40,7 +40,7 @@
                   <span class="listTextU">
                     {{user.username}}
                   </span>
-                  <button class="button" v-on:click="getVideosByUserId(user.user_id)">Load Videos</button>
+                  <button class="button" v-on:click="getVideosByUserId(user.user_id, user.username)">Load Videos</button>
                 </div>
               </li>
             </div>
@@ -48,6 +48,15 @@
         </div> 
         <div v-if="videosData != null" class="list">
           <ul class="list-group">
+            <div>
+              <li class="list-group-item mx-auto">
+                <div class="d-flex w-100 justify-content-between">
+                  <span class="headerTextV">
+                    {{selectedUsername}}'s Videos:
+                  </span>
+                </div>
+              </li>
+            </div>
             <div>
               <li class="list-group-item mx-auto">
                 <div class="d-flex w-100 justify-content-between">

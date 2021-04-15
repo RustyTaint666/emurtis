@@ -22,6 +22,7 @@ var app = new Vue({
       editModal: false,
       viewModal: false,
       selectedVideo: null,
+      selectedUsername: null,
 
       input: {
         username: "",
@@ -100,7 +101,8 @@ var app = new Vue({
             })
         },
 
-        getVideosByUserId(user_id) {
+        getVideosByUserId(user_id, username) {
+          this.selectedUsername = username;
           axios
           .get(this.serviceURL+"/users/"+ user_id +"/videos")
           .then(response => {
