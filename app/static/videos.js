@@ -12,7 +12,7 @@ var app = new Vue({
   
     //------- data --------
     data: {
-      serviceURL: "https://cs3103.cs.unb.ca:50036",
+      serviceURL: "https://cs3103.cs.unb.ca:8003",
       authenticated: false,
       loggedIn: null,
       usersData: null,
@@ -104,14 +104,11 @@ var app = new Vue({
           axios
           .get(this.serviceURL+"/users/"+ user_id +"/videos")
           .then(response => {
-            if (response.status === 404) {
-              this.videosData = null; //this isnt working to refresh when the last video is deleted
-            } else {
-              this.videosData = response.data.videos;
-            }
+            this.videosData = response.data.videos;
           })
           .catch(error => {
             console.log(error);
+            this.videosData = null;
           })
         },
 
